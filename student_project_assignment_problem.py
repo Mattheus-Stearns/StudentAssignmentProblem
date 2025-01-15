@@ -12,7 +12,7 @@ def load_project_capacities(csv_filename):
             project_max_capacities[project_id] = max_participants
     return project_max_capacities
 
-def assign_students_from_csv(student_csv_filename, project_csv_filename):
+def assign_students_from_csv(student_csv_filename, project_csv_filename, output_assignment_csv, output_eliminated_csv):
     # Load project capacities from the CSV file
     project_max_capacities = load_project_capacities(project_csv_filename)
     assignments = defaultdict(list)
@@ -58,14 +58,28 @@ def assign_students_from_csv(student_csv_filename, project_csv_filename):
                 # If no available project even after backup, add to eliminated
                 eliminated.add(student)
     
-    # Output results
-    for project, group in assignments.items():
-        print(f"{project}: {len(group)} students - {group}")
+        # Write assignments to CSV
+        # Sort projects by numeric order of their IDs
+    sorted_projects = sorted(assignments.items(), key=lambda x: int(x[0]))
+    with open(output_assignment_csv, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Project_ID', 'Assigned_Students'])
+        for project, group in assignments.items():
+            writer.writerow([project, ', '.join(group)])
     
-    print(f"Total eliminated students: {len(eliminated)}")
-    print(f"Eliminated students: {eliminated}")
+    # Write eliminated students to CSV
+    with open(output_eliminated_csv, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Eliminated_Students'])
+        for student in eliminated:
+            writer.writerow([student])
 
-    return assignments, eliminated
+    print(f"Results written to {output_assignment_csv} and {output_eliminated_csv}")
 
 # Run the function with the CSV files
-assignments, eliminated = assign_students_from_csv('students_sample.csv', 'project_capacities.csv')
+assign_students_from_csv(
+    'students_sample.csv', 
+    'project_capacities.csv', 
+    'assignments.csv', 
+    'eliminated_students.csv'
+)
